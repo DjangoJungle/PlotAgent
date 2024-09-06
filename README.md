@@ -48,7 +48,7 @@
 
 ### 2.3 tool_functions定义
 
-
+在**`tool_registry.py`**文件中，可参考**附录A**，有详细的代码实现
 
 ### 2.4 用户交互
 
@@ -56,7 +56,7 @@
 
 ![image-20240906153817792](assets/image-20240906153817792.png)
 
-设置了表格数据展示、饼状图展示、折线图展示三个组件，上图未尚未生成时的状态，下图为生成后的状态：
+设置了**表格数据展示、饼状图展示、折线图展示**三个组件，上图为尚未生成时的状态，下图为生成后的状态：
 
 | ![image-20240906154128777](assets/image-20240906154128777.png) | ![image-20240905211759885](assets/image-20240905211759885.png) | ![image-20240905212637264](assets/image-20240905212637264.png) |
 | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -72,7 +72,7 @@ git clone https://github.com/DjangoJungle/PlotAgent
 cd PlotAgent
 ```
 
-创建虚拟环境：
+创建虚拟环境（需安装anaconda）：
 
 ```text
 conda create -n chatglm python=3.11
@@ -100,7 +100,7 @@ cd PlotAgent/composite_demo
 streamlit run main.py
 ```
 
-> 整个过程的环境配置较为复杂，在最后的附录附上一个可运行的anaconda环境供参考
+> 整个过程的环境配置较为复杂，在最后的**附录B**附上一个可运行的anaconda环境供参考
 >
 > 且如果配置不够且需要较流畅运行，需要对部分代码加上量化操作
 
@@ -155,7 +155,411 @@ streamlit run main.py
   
   
   
-  ## 附：anaconda环境参考
+  ## 附A：tool_functions定义
+  
+  ```python
+  @register_tool
+  def extract_and_save_tables(file_name: Annotated[str, 'The name of the text file containing tables', True]) -> str:
+      """
+      从文本文件中提取逗号分隔的表格并保存为CSV文件，随后可视化表格内容。
+      """
+      def is_comma_separated_line(line):
+          return line.count(',') >= 2
+  
+      def save_table(table_lines):
+          output_file = "extracted_table.csv"
+          with open(output_file, 'w', encoding='utf-8') as file:
+              for line in table_lines:
+                  file.write(line)
+          return output_file
+  
+      file_path = f"./{file_name}"
+      try:
+          with open(file_path, 'r', encoding='utf-8') as file:
+              lines = file.readlines()
+  
+          table_lines = []
+          in_table = False
+          column_count = 0
+  
+          for line in lines:
+              if is_comma_separated_line(line):
+                  current_column_count = line.count(',') + 1
+                  if not in_table:
+                      in_table = True
+                      column_count = current_column_count
+                      table_lines.append(line)
+                  else:
+                      if current_column_count == column_count:
+                          table_lines.append(line)
+                      else:
+                          break
+              else:
+                  if in_table:
+                      break
+  
+          if table_lines:
+              output_file = save_table(table_lines)
+              df = pd.read_csv(output_file, index_col=0)
+              st.table(df)  # 可视化表格
+              return f"表格已提取并保存为 `{output_file}`。"
+          else:
+              return "文件中未找到有效表格。"
+  
+      except Exception as e:
+          return f"处理文件时发生错误: {e}"
+  
+  
+  @register_tool
+  def append_average(file_name: Annotated[str, 'The name of the csv file containing data', True]) -> str:
+      """
+      向表格中添加 '平均值' 列，计算每行的平均值并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+  
+      作用:
+      - 计算每一行的数值列的平均值，并添加到 '平均值' 列。如果该列已存在，则会先删除旧的列，再添加新的 '平均值' 列。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if '平均值' in df.columns:
+          df.drop('平均值', axis=1, inplace=True)
+  
+      df['平均值'] = df.mean(axis=1)
+      df.to_csv(file_path, header=True)
+  
+      st.table(df)  # 可视化表格
+      return "平均值列已成功添加并保存。"
+  
+  
+  @register_tool
+  def append_max(file_name: Annotated[str, 'The name of the csv file containing data', True]) -> str:
+      """
+      向表格中添加 '最大值' 列，计算每行的最大值并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+  
+      作用:
+      - 计算每一行的数值列的最大值，并添加到 '最大值' 列。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+      df['最大值'] = df.max(axis=1)
+      df.to_csv(file_path, header=True)
+  
+      st.table(df)  # 可视化表格
+      return "最大值列已成功添加并保存。"
+  
+  
+  @register_tool
+  def append_min(file_name: Annotated[str, 'The name of the csv file containing data', True]) -> str:
+      """
+      向表格中添加 '最小值' 列，计算每行的最小值并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+  
+      作用:
+      - 计算每一行的数值列的最小值，并添加到 '最小值' 列。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+      df['最小值'] = df.min(axis=1)
+      df.to_csv(file_path, header=True)
+  
+      st.table(df)  # 可视化表格
+      return "最小值列已成功添加并保存。"
+  
+  
+  @register_tool
+  def delete_row(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                 row_name: Annotated[str, 'The name of the row being deleted', True]) -> str:
+      """
+      删除指定名称的行并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - row_name: 要删除的行的名称（行索引）。
+  
+      作用:
+      - 从表格中删除指定名称的行，并更新表格。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+      if row_name not in df.index:
+          return "无效的删除要求，未找到指定行。"
+  
+      df.drop(row_name, inplace=True)
+      df.to_csv(file_path)
+  
+      st.table(df)  # 可视化表格
+      return f"行 '{row_name}' 的数据已成功删除。"
+  
+  
+  @register_tool
+  def delete_column(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                    column_name: Annotated[str, 'The name of the column being deleted', True]) -> str:
+      """
+      删除指定名称的列并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - column_name: 要删除的列的名称（列标题）。
+  
+      作用:
+      - 从表格中删除指定名称的列，并更新表格。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if column_name not in df.columns:
+          return "无效的删除要求，未找到指定列。"
+  
+      df.drop(column_name, axis=1, inplace=True)
+      df['平均值'] = df.mean(axis=1)
+      df['最大值'] = df.max(axis=1)
+      df['最小值'] = df.min(axis=1)
+      df.to_csv(file_path)
+  
+      st.table(df)  # 可视化表格
+      return f"列 '{column_name}' 的数据已成功删除，并重新计算统计列。"
+  
+  
+  @register_tool
+  def append_row(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                 row_name: Annotated[str, 'The name of the row being added', True],
+                 row_data: Annotated[list, 'The new row data', True]) -> str:
+      """
+      添加新行并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - row_name: 新行的名称（行索引）。
+      - row_data: 新行的数据（应与表格的列数匹配）。
+  
+      作用:
+      - 向表格中添加新行，并更新表格。如果数据不足，使用 None 填充。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if row_name in df.index:
+          return f"行 '{row_name}' 的数据已存在，无法添加重复数据。"
+  
+      # 如果 row_data 列数不足，使用 None 填充
+      if len(row_data) < len(df.columns):
+          row_data += [None] * (len(df.columns) - len(row_data))
+      # 如果 row_data 列数多于 df.columns，裁剪掉多余的列
+      elif len(row_data) > len(df.columns):
+          row_data = row_data[:len(df.columns)]
+  
+      new_row = pd.DataFrame([row_data], columns=df.columns, index=[row_name])
+      df = pd.concat([df, new_row])
+  
+      # 计算新的统计数据
+      df['平均值'] = df.mean(axis=1)
+      df['最大值'] = df.max(axis=1)
+      df['最小值'] = df.min(axis=1)
+  
+      # 保存更新后的数据
+      df.to_csv(file_path)
+  
+      # 可视化表格
+      st.table(df)
+      return f"行 '{row_name}' 的数据已成功添加。"
+  
+  
+  @register_tool
+  def append_column(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                    column_name: Annotated[str, 'The name of the column being added', True],
+                    column_data: Annotated[list, 'The new column data', True]) -> str:
+      """
+      添加新列并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - column_name: 新列的名称（列标题）。
+      - column_data: 新列的数据（应与表格的行数匹配）。
+  
+      作用:
+      - 向表格中添加新列，并更新表格。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if column_name in df.columns:
+          return f"列 '{column_name}' 的数据已存在，无法添加重复数据。"
+  
+      df[column_name] = column_data
+      df['平均值'] = df.mean(axis=1)
+      df['最大值'] = df.max(axis=1)
+      df['最小值'] = df.min(axis=1)
+      df.to_csv(file_path)
+  
+      st.table(df)  # 可视化表格
+      return f"列 '{column_name}' 的数据已成功添加。"
+  
+  
+  @register_tool
+  def query_table_data(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                       row_name: Annotated[str, 'The name of the row to query (optional)', False] = None,
+                       column_name: Annotated[str, 'The name of the column to query (optional)', False] = None) -> str:
+      """
+      查询表格中的数据，支持按行、按列或按单元格查询。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要查询的数据。
+      - row_name: 可选参数，指定要查询的行的名称。
+      - column_name: 可选参数，指定要查询的列的名称。
+  
+      作用:
+      - 如果提供行名和列名，返回对应的单元格数据。
+      - 如果只提供行名，返回对应行的数据。
+      - 如果只提供列名，返回对应列的数据。
+      - 如果都未提供，返回整个表格的数据。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if row_name and column_name:
+          # 查询特定单元格的数据
+          if row_name in df.index and column_name in df.columns:
+              value = df.loc[row_name, column_name]
+              return f"单元格 ({row_name}, {column_name}) 的数据为: {value}"
+          else:
+              return "无效的查询，未找到指定的行或列。"
+  
+      elif row_name:
+          # 查询指定行的数据
+          if row_name in df.index:
+              row_data = df.loc[row_name]
+              return f"行 '{row_name}' 的数据为:\n{row_data}"
+          else:
+              return f"未找到行 '{row_name}'。"
+  
+      elif column_name:
+          # 查询指定列的数据
+          if column_name in df.columns:
+              column_data = df[column_name]
+              return f"列 '{column_name}' 的数据为:\n{column_data}"
+          else:
+              return f"未找到列 '{column_name}'。"
+  
+      else:
+          # 未指定行或列，返回整个表格
+          return f"完整表格数据:\n{df}"
+  
+  
+  
+  
+  @register_tool
+  def update(file_name: Annotated[str, 'The name of the csv file containing data', True],
+             column_name: Annotated[str, 'The name of the column being changed', True],
+             row_name: Annotated[str, 'The name of the row being changed', True],
+             value: Annotated[float, 'The new value', True]) -> str:
+      """
+      更新指定行和列的单元格数据并可视化表格。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - column_name: 要更新的列的名称（列标题）。
+      - row_name: 要更新的行的名称（行索引）。
+      - value: 要设置的新值。
+  
+      作用:
+      - 更新表格中指定行和列的单元格数据，并更新表格。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if row_name not in df.index or column_name not in df.columns:
+          return "无效的更新请求，未找到指定的行或列。"
+  
+      df.loc[row_name, column_name] = value
+      df['平均值'] = df.mean(axis=1)
+      df['最大值'] = df.max(axis=1)
+      df['最小值'] = df.min(axis=1)
+      df.to_csv(file_path)
+  
+      st.table(df)  # 可视化表格
+      return f"行 '{row_name}'，列 '{column_name}' 的数据已更新为 {value}。"
+  
+  
+  import matplotlib.pyplot as plt
+  import pandas as pd
+  import streamlit as st
+  
+  @register_tool
+  def pie_chart(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                column_name: Annotated[str, 'The name of the column for the pie chart', True]) -> str:
+      """
+      绘制指定列的各行数据比例饼状图，并将图片保存到本地，然后在 Streamlit 中显示。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - column_name: 要绘制的列的名称。
+  
+      作用:
+      - 根据指定列的数据，绘制各行数据比例的饼状图，并保存为 PNG 图片。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if column_name not in df.columns:
+          return f"列 '{column_name}' 的数据未找到。"
+  
+      fig, ax = plt.subplots()  # 创建子图
+      ax.pie(df[column_name], labels=df.index, autopct="%.1f%%")
+      ax.set_title(f"{column_name} 各行数据比例")
+      ax.axis('equal')
+  
+      # 保存图片到本地
+      image_file = f"pie_chart.png"
+      fig.savefig(image_file)
+  
+      return f"列 '{column_name}' 的数据比例饼状图已保存为 {image_file}。"
+  
+  
+  @register_tool
+  def line_chart(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                 row_name: Annotated[str, 'The name of the row for the line chart', True]) -> str:
+      """
+      绘制指定行的数据变化趋势图，并将图片保存到本地，然后在 Streamlit 中显示。
+  
+      参数:
+      - file_name: CSV 文件的名称，包含要处理的数据。
+      - row_name: 要绘制的行的名称。
+  
+      作用:
+      - 根据指定行的数据，绘制各列数据的变化趋势折线图，并保存为 PNG 图片。
+      """
+      file_path = f"./{file_name}"
+      df = pd.read_csv(file_path, index_col=0)
+  
+      if row_name not in df.index:
+          return f"行 '{row_name}' 的数据未找到。"
+  
+      data = df.loc[row_name, df.columns.difference(['平均值', '最大值', '最小值'])]
+  
+      fig, ax = plt.subplots()  # 创建子图
+      ax.plot(data, marker='o', linestyle='-', linewidth=2, color='blue')
+      ax.set_xlabel("列名")
+      ax.set_ylabel("值")
+      ax.set_title(f"行 '{row_name}' 的数据变化趋势")
+  
+      # 保存图片到本地
+      image_file = f"line_chart.png"
+      fig.savefig(image_file)
+  
+      return f"行 '{row_name}' 的数据变化趋势图已保存为 {image_file}。"
+  ```
+  
+  
+  
+  ## 附B：anaconda环境参考
   
   ```
   # packages in environment at D:\anaconda3\envs\chatglm3:
