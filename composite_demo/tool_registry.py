@@ -78,33 +78,6 @@ def get_tools() -> dict:
 # Tool Definitions
 
 
-@register_tool
-def get_weather(
-        city_name: Annotated[str, 'The name of the city to be queried', True],
-) -> str:
-    """
-    Get the current weather for `city_name`
-    """
-
-    if not isinstance(city_name, str):
-        raise TypeError("City name must be a string")
-
-    key_selection = {
-        "current_condition": ["temp_C", "FeelsLikeC", "humidity", "weatherDesc", "observation_time"],
-    }
-    import requests
-    try:
-        resp = requests.get(f"https://wttr.in/{city_name}?format=j1")
-        resp.raise_for_status()
-        resp = resp.json()
-        ret = {k: {_v: resp[k][0][_v] for _v in v} for k, v in key_selection.items()}
-    except:
-        import traceback
-        ret = "Error encountered while fetching weather data!\n" + traceback.format_exc()
-
-    return str(ret)
-
-
 import pandas as pd
 import matplotlib.pyplot as plt
 import streamlit as st
@@ -354,6 +327,58 @@ def append_column(file_name: Annotated[str, 'The name of the csv file containing
 
     st.table(df)  # 可视化表格
     return f"列 '{column_name}' 的数据已成功添加。"
+
+
+@register_tool
+def query_table_data(file_name: Annotated[str, 'The name of the csv file containing data', True],
+                     row_name: Annotated[str, 'The name of the row to query (optional)', False] = None,
+                     column_name: Annotated[str, 'The name of the column to query (optional)', False] = None) -> str:
+    """
+    查询表格中的数据，支持按行、按列或按单元格查询。
+
+    参数:
+    - file_name: CSV 文件的名称，包含要查询的数据。
+    - row_name: 可选参数，指定要查询的行的名称。
+    - column_name: 可选参数，指定要查询的列的名称。
+
+    作用:
+    - 如果提供行名和列名，返回对应的单元格数据。
+    - 如果只提供行名，返回对应行的数据。
+    - 如果只提供列名，返回对应列的数据。
+    - 如果都未提供，返回整个表格的数据。
+    """
+    file_path = f"./{file_name}"
+    df = pd.read_csv(file_path, index_col=0)
+
+    if row_name and column_name:
+        # 查询特定单元格的数据
+        if row_name in df.index and column_name in df.columns:
+            value = df.loc[row_name, column_name]
+            return f"单元格 ({row_name}, {column_name}) 的数据为: {value}"
+        else:
+            return "无效的查询，未找到指定的行或列。"
+
+    elif row_name:
+        # 查询指定行的数据
+        if row_name in df.index:
+            row_data = df.loc[row_name]
+            return f"行 '{row_name}' 的数据为:\n{row_data}"
+        else:
+            return f"未找到行 '{row_name}'。"
+
+    elif column_name:
+        # 查询指定列的数据
+        if column_name in df.columns:
+            column_data = df[column_name]
+            return f"列 '{column_name}' 的数据为:\n{column_data}"
+        else:
+            return f"未找到列 '{column_name}'。"
+
+    else:
+        # 未指定行或列，返回整个表格
+        return f"完整表格数据:\n{df}"
+
+
 
 
 @register_tool
