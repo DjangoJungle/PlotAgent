@@ -69,7 +69,7 @@
 
 ```powershell
 git clone https://github.com/DjangoJungle/PlotAgent
-cd ChatGLM3
+cd PlotAgent
 ```
 
 创建虚拟环境：
@@ -96,10 +96,13 @@ git clone https://www.modelscope.cn/ZhipuAI/chatglm3-6b.git
 运行模型：
 
 ```
-cd ChatGLM/
+cd PlotAgent/composite_demo
+streamlit run main.py
 ```
 
-
+> 整个过程的环境配置较为复杂，在最后的附录附上一个可运行的anaconda环境供参考
+>
+> 且如果配置不够且需要较流畅运行，需要对部分代码加上量化操作
 
 
 
@@ -152,7 +155,94 @@ cd ChatGLM/
   
   
   
+  ## 附：anaconda环境参考
   
+  ```
+  # packages in environment at D:\anaconda3\envs\chatglm3:
+  #
+  # Name                    Version                   Build  Channel
+  accelerate                0.24.0                   pypi_0    pypi
+  altair                    5.4.1                    pypi_0    pypi
+  attrs                     24.2.0                   pypi_0    pypi
+  blinker                   1.8.2                    pypi_0    pypi
+  bzip2                     1.0.8                h2bbff1b_6
+  ca-certificates           2024.7.2             haa95532_0
+  cachetools                5.5.0                    pypi_0    pypi
+  certifi                   2024.8.30                pypi_0    pypi
+  charset-normalizer        3.3.2                    pypi_0    pypi
+  click                     8.1.7                    pypi_0    pypi
+  contourpy                 1.3.0                    pypi_0    pypi
+  cpm-kernels               1.0.11                   pypi_0    pypi
+  cycler                    0.12.1                   pypi_0    pypi
+  filelock                  3.15.4                   pypi_0    pypi
+  fonttools                 4.53.1                   pypi_0    pypi
+  fsspec                    2024.6.1                 pypi_0    pypi
+  gitdb                     4.0.11                   pypi_0    pypi
+  gitpython                 3.1.43                   pypi_0    pypi
+  huggingface-hub           0.19.4                   pypi_0    pypi
+  idna                      3.8                      pypi_0    pypi
+  intel-openmp              2021.4.0                 pypi_0    pypi
+  ipykernel                 6.29.5                   pypi_0    pypi
+  ipython                   8.27.0                   pypi_0    pypi
+  jinja2                    3.1.4                    pypi_0    pypi
+  jsonschema                4.23.0                   pypi_0    pypi
+  jsonschema-specifications 2023.12.1                pypi_0    pypi
+  jupyter-client            8.6.2                    pypi_0    pypi
+  kiwisolver                1.4.7                    pypi_0    pypi
+  libffi                    3.4.4                hd77b12b_1
+  markdown-it-py            3.0.0                    pypi_0    pypi
+  markupsafe                2.1.5                    pypi_0    pypi
+  matplotlib                3.9.2                    pypi_0    pypi
+  mdurl                     0.1.2                    pypi_0    pypi
+  mkl                       2021.4.0                 pypi_0    pypi
+  mpmath                    1.3.0                    pypi_0    pypi
+  narwhals                  1.6.2                    pypi_0    pypi
+  networkx                  3.3                      pypi_0    pypi
+  numpy                     2.1.1                    pypi_0    pypi
+  openssl                   3.0.14               h827c3e9_0
+  packaging                 24.1                     pypi_0    pypi
+  pandas                    2.2.2                    pypi_0    pypi
+  pillow                    10.4.0                   pypi_0    pypi
+  pip                       24.2            py311haa95532_0
+  prompt-toolkit            3.0.47                   pypi_0    pypi
+  protobuf                  5.28.0                   pypi_0    pypi
+  pyarrow                   17.0.0                   pypi_0    pypi
+  pydeck                    0.9.1                    pypi_0    pypi
+  pyparsing                 3.1.4                    pypi_0    pypi
+  python                    3.11.9               he1021f5_0
+  pytz                      2024.1                   pypi_0    pypi
+  pyyaml                    6.0.2                    pypi_0    pypi
+  referencing               0.35.1                   pypi_0    pypi
+  regex                     2024.7.24                pypi_0    pypi
+  requests                  2.32.3                   pypi_0    pypi
+  rich                      13.8.0                   pypi_0    pypi
+  rpds-py                   0.20.0                   pypi_0    pypi
+  safetensors               0.4.4                    pypi_0    pypi
+  sentencepiece             0.2.0                    pypi_0    pypi
+  setuptools                72.1.0          py311haa95532_0
+  smmap                     5.0.1                    pypi_0    pypi
+  sqlite                    3.45.3               h2bbff1b_0
+  streamlit                 1.38.0                   pypi_0    pypi
+  sympy                     1.13.2                   pypi_0    pypi
+  tbb                       2021.13.1                pypi_0    pypi
+  tenacity                  8.5.0                    pypi_0    pypi
+  tk                        8.6.14               h0416ee5_0
+  tokenizers                0.19.1                   pypi_0    pypi
+  toml                      0.10.2                   pypi_0    pypi
+  torch                     2.3.1+cu121              pypi_0    pypi
+  tqdm                      4.66.5                   pypi_0    pypi
+  traitlets                 5.14.3                   pypi_0    pypi
+  transformers              4.40.0                   pypi_0    pypi
+  typing-extensions         4.12.2                   pypi_0    pypi
+  tzdata                    2024.1                   pypi_0    pypi
+  urllib3                   2.2.2                    pypi_0    pypi
+  vc                        14.40                h2eaa2aa_0
+  vs2015_runtime            14.40.33807          h98bb1dd_0
+  watchdog                  4.0.2                    pypi_0    pypi
+  wheel                     0.43.0          py311haa95532_0
+  xz                        5.4.6                h8cc25b3_1
+  zlib                      1.2.13               h8cc25b3_1
+  ```
   
   
   
